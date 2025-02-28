@@ -1,20 +1,24 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
-const connectDB = require('./db');
-
-dotenv.config();
-connectDB();
+require('dotenv').config();
+const connectDB = require('./config/db');
+const { generateFile } = require('./generateFile');
+const { executeCpp } = require('./executeCpp');
 
 const app = express();
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mysecretkey';
+
+// Root Route
+app.get('/', (req, res) => {
+    return res.json("Hello There! Server is running...");
+});
 
 // Signup Endpoint
 app.post('/signup', async (req, res) => {
@@ -50,6 +54,30 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// Code Execution Endpoint
+app.post('/run', async (req, res) => {
+    console.log(req.body);
+    const { language = "cpp", code } = req.body;
+
+    if (!code) {
+        return res.status(400).json({ success: false, error: "Code is required" });
+    }
+
+    try {
+        const filepath = await generateFile(language, code);
+        const output = await executeCpp(filepath);
+        return res.json({ filepath, output });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+const startServer = async () => {
+    await connectDB();
+    app.listen(PORT, () => {
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
+    });
+};
+startServer();

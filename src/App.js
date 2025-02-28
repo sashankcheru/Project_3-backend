@@ -82,9 +82,7 @@ function App() {
         <div className={`container ${isSignup ? 'signup' : ''}`}>
 
             <div className="shape">
-                {/* <div className="shape-text">
-                    {isSignup ? 'Sign Up' : 'Login'}
-                </div> */}
+               
                 <p className="toggle" onClick={() => setIsSignup(!isSignup)}>
                 {isSignup ? "Don't have an account? Sign up":'Already have an account? Login'}
             </p>
